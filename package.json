@@ -1,0 +1,28 @@
+{
+  "name": "taico",
+  "version": "1.0.0",
+  "description": "unit testing framework for nodejs ES6",
+  "main": "index.js",
+  "scripts": {
+    "test": "none"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kombuster/taico.git"
+  },
+  "keywords": [
+    "unit",
+    "testing",
+    "runner"
+  ],
+  "author": "Alex Soldatov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kombuster/taico/issues"
+  },
+  "homepage": "https://github.com/kombuster/taico#readme",
+  "dependencies": {
+    "chalk": "^1.1.1",
+    "require-dir": "^0.3.0"
+  }
+}
