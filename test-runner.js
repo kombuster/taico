@@ -34,8 +34,9 @@ class TestRunner {
 						}
 						testModule.methods.push({ name:method, func: testModule.module[method] });
 					}
-					var sut = testModule.module['underTest'];
-					assert(sut, module +': module under test must be specified');
+					var sut = testModule.module.underTest;
+					assert(sut, 'module under test must be specified in ' + testModule.name);
+
 					testModule.underTest = new ModuleUnderTest(sut, testModule.source);
 					testModules.push(testModule);
 				}
@@ -47,13 +48,14 @@ class TestRunner {
 	run(done, options) {
 		this.load()
 		.then(testModules=>{
+
 			for(var module of testModules) {
 				console.log(chalk.green(module.name));
-				var instance = module.underTest.create();
 				for (var method of module.methods) {
 					try {
-						method.func(instance);
-						console.log(chalk.green('--' + method.name));
+						console.log(chalk.yellow('--' + method.name));
+						method.func();
+						console.log(chalk.green('--OK--'));
 					} catch(e) {
 						console.log(chalk.red(e.stack));
 						console.log(chalk.red('--' + method.name));
@@ -61,6 +63,8 @@ class TestRunner {
 					}
 				}
 			}
+		
+
 			if (options && options.watch) {
 				if (!this.watching) {
 					var filesToWatch = [];
@@ -70,8 +74,12 @@ class TestRunner {
 					});
 					chokidar.watch(filesToWatch).on('change', path => {
 						console.log(path + ' changed');
+						for(var module of testModules) {
+							module.underTest.reload();						
+						}
 	  				this.run(done, options);
 					});
+					console.log('...standing by for changes...');
 					this.watching = true;
 				}
 			} else {

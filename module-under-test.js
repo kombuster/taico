@@ -16,13 +16,13 @@ class ModuleUnderTest {
 		assert(fs.existsSync(this.path), 'module under test is not found at:' + this.path);
 	}
 
-	create() {
+	reload() {
 		var moduleReference = require.resolve(this.path);
 		if (moduleReference && require.cache[moduleReference]) {
 			delete require.cache[moduleReference];
 		}
 		var type = require(this.path);
-		return new type(this.buildWith[0], this.buildWith[1], this.buildWith[2], this.buildWith[3], this.buildWith[5]);
+		//return new type(this.buildWith[0], this.buildWith[1], this.buildWith[2], this.buildWith[3], this.buildWith[5]);
 	}
 }
 
