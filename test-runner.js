@@ -48,23 +48,63 @@ class TestRunner {
 	run(done, options) {
 		this.load()
 		.then(testModules=>{
-
+			var promiseChain = [];
 			for(var module of testModules) {
-				console.log(chalk.green(module.name));
 				for (var method of module.methods) {
-					try {
-						console.log(chalk.yellow('--' + method.name));
-						method.func();
-						console.log(chalk.green('--OK--'));
-					} catch(e) {
-						console.log(chalk.red(e.stack));
-						console.log(chalk.red('--' + method.name));
-						console.log(chalk.red('----' + e));
-					}
+					promiseChain.push({ module, method, 
+						run:function(){
+							var self = this;
+							return new Promise((resolve, reject)=>{
+								console.log(chalk.yellow(self.module.name + '.' + self.method.name));
+								var resultHandler = (e) => {
+									if (e) {
+										//console.log(chalk.red(e.stack));
+										console.log(chalk.red('--' + self.method.name));
+										console.log(chalk.red('----' + e));									
+									} else {
+										console.log(chalk.green('--OK--'));
+									}
+								};
+								try{
+									var result = self.method.func();
+									if (result instanceof Promise) {
+										result.then(()=>{
+											resultHandler();
+											resolve();
+										})
+										.catch(resultHandler);
+									} else {
+										resultHandler();
+										resolve();
+									}
+								} catch(e) {
+									resultHandler(e);
+									resolve();
+								}
+							});
+						}
+					});
 				}
-			}
-		
+			};
 
+			return new Promise((resolve,reject)=>{
+				var unitThen = (unit)=> {
+					if (!unit) {
+						resolve(testModules);
+					} else {
+						unit.run()
+						.then(()=>{
+							unitThen(promiseChain.shift());
+						})
+						.catch(e => {
+							console.log('shit happened');
+						});
+					}
+				};
+				unitThen(promiseChain.shift());
+			});
+		})	
+		.then(testModules=>{
 			if (options && options.watch) {
 				if (!this.watching) {
 					var filesToWatch = [];
