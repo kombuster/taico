@@ -46,11 +46,24 @@ class TestRunner {
 	}
 
 	run(done, options) {
+		var filter = { module: null, method: null};
+
+		if (options && options.focus) {
+			var split = options.focus.split('.');
+			filter = { module: split[0], method: split[1] };
+		}
+
 		this.load()
 		.then(testModules=>{
 			var promiseChain = [];
 			for(var module of testModules) {
+				if (filter.module && filter.module != module.name) {
+					continue;
+				}
 				for (var method of module.methods) {
+					if (filter.method && filter.method != method.name) {
+						continue;
+					}
 					promiseChain.push({ module, method, 
 						run:function(){
 							var self = this;
