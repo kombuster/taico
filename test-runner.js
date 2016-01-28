@@ -11,6 +11,7 @@ const chokidar = require('chokidar');
 class TestRunner {
 	constructor(testsDir){
 		this.testsDir = testsDir;
+		this.testRun = 1;
 	}
 
 	load() {
@@ -36,8 +37,11 @@ class TestRunner {
 					}
 					var sut = testModule.module.underTest;
 					assert(sut, 'module under test must be specified in ' + testModule.name);
+					if (!sut.length){
+						sut = [sut];
+					}
 
-					testModule.underTest = new ModuleUnderTest(sut, testModule.source);
+					testModule.underTest = sut.map(sut => new ModuleUnderTest(sut, testModule.source));
 					testModules.push(testModule);
 				}
 				resolve(testModules);
@@ -118,17 +122,19 @@ class TestRunner {
 			});
 		})	
 		.then(testModules=>{
+			console.log('test run #' + this.testRun + ' complete');
+			this.testRun++;
 			if (options && options.watch) {
 				if (!this.watching) {
 					var filesToWatch = [];
 					testModules.forEach(module => {
 						filesToWatch.push(module.source);
-						filesToWatch.push(module.underTest.path);
+						module.underTest.forEach(sut=>filesToWatch.push(sut.path));
 					});
 					chokidar.watch(filesToWatch).on('change', path => {
 						console.log(path + ' changed');
 						for(var module of testModules) {
-							module.underTest.reload();						
+							module.underTest.forEach(sut=>sut.reload());						
 						}
 	  				this.run(done, options);
 					});
